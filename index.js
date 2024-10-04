@@ -66,7 +66,10 @@ app.put('/api/flavors/:id', async (req, res, next) => {
       SET name=$1, is_favorite=$2, updated_at= now()
       WHERE id=$3 RETURNING *;
     `;
-    const response = await client.query(SQL, [req.body.name, req.body.is_favorite, req.params.id]);
+    const response = await client.query(SQL, [req.body.name, req.body.is_favorite || false, req.params.id]);
+    if (response.rows.length === 0) {
+      return res.status(404).send({message: 'Flavor not found'});
+    }
     res.send(response.rows[0])
   } catch (ex) {
     next(ex)
@@ -77,13 +80,13 @@ app.put('/api/flavors/:id', async (req, res, next) => {
 app.delete('/api/flavors/:id', async (req, res, next) => {
   try {
     const SQL = `
-      DELETE from flavors
+      DELETE FROM flavors
       WHERE id = $1
     `;
     const response = await client.query(SQL, [req.params.id]);
-    res.sendStatus(204)
+    res.sendStatus(204);
   } catch (ex) {
-    next(ex)
+    next(ex);
   }
 });
 
